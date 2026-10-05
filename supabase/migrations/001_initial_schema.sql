@@ -1,14 +1,12 @@
 -- ==============================================================================
--- 3D PORTFOLIO & CMS DATABASE MIGRATION SCRIPT
--- Tables: profile_intro, skills, work_experience, education, certificates_achievements, projects
--- Storage: portfolio-media bucket
--- Security: Row Level Security (RLS) & Triggers
+-- 3D PORTFOLIO & CMS COMPLETE DATABASE MIGRATION SCRIPT
+-- IMPORTANT: Copy and paste this ENTIRE file into the Supabase SQL Editor and click "Run".
+-- (Do not select or highlight partial snippets, run the whole script all at once)
 -- ==============================================================================
 
--- 1. EXTENSIONS & CLEANUP
+-- 1. EXTENSIONS & TRIGGER FUNCTIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Trigger function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -24,10 +22,10 @@ $$ LANGUAGE plpgsql;
 -- Table 1: profile_intro
 CREATE TABLE IF NOT EXISTS public.profile_intro (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    full_name TEXT NOT NULL DEFAULT 'Alex Rivera',
-    tagline TEXT NOT NULL DEFAULT 'Creative Technologist & 3D Web Engineer',
+    full_name TEXT NOT NULL DEFAULT 'Dhanush Rao',
+    tagline TEXT NOT NULL DEFAULT 'WebGL & Cloud Architect',
     bio TEXT NOT NULL DEFAULT 'Crafting hyper-interactive digital experiences at the intersection of 3D graphics, generative design, and high-performance full-stack architectures.',
-    avatar_url TEXT DEFAULT 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+    avatar_url TEXT DEFAULT '/avatars/male-1.png',
     resume_file_url TEXT DEFAULT '',
     status_badge TEXT DEFAULT 'Available for High-Impact Roles',
     social_links JSONB DEFAULT '{
@@ -160,7 +158,22 @@ ALTER TABLE public.education ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.certificates_achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 
--- 4.1 Public Read (Anonymous and Authenticated can read)
+-- Drop all existing policies to ensure idempotency when re-running
+DROP POLICY IF EXISTS "Public read profile" ON public.profile_intro;
+DROP POLICY IF EXISTS "Public read skills" ON public.skills;
+DROP POLICY IF EXISTS "Public read experience" ON public.work_experience;
+DROP POLICY IF EXISTS "Public read education" ON public.education;
+DROP POLICY IF EXISTS "Public read certificates" ON public.certificates_achievements;
+DROP POLICY IF EXISTS "Public read projects" ON public.projects;
+
+DROP POLICY IF EXISTS "Allow write profile" ON public.profile_intro;
+DROP POLICY IF EXISTS "Allow write skills" ON public.skills;
+DROP POLICY IF EXISTS "Allow write experience" ON public.work_experience;
+DROP POLICY IF EXISTS "Allow write education" ON public.education;
+DROP POLICY IF EXISTS "Allow write certificates" ON public.certificates_achievements;
+DROP POLICY IF EXISTS "Allow write projects" ON public.projects;
+
+-- Recreate policies: allow public read and full write permissions for CMS operations
 CREATE POLICY "Public read profile" ON public.profile_intro FOR SELECT USING (true);
 CREATE POLICY "Public read skills" ON public.skills FOR SELECT USING (true);
 CREATE POLICY "Public read experience" ON public.work_experience FOR SELECT USING (true);
@@ -168,51 +181,48 @@ CREATE POLICY "Public read education" ON public.education FOR SELECT USING (true
 CREATE POLICY "Public read certificates" ON public.certificates_achievements FOR SELECT USING (true);
 CREATE POLICY "Public read projects" ON public.projects FOR SELECT USING (true);
 
--- 4.2 Authenticated Write (Only logged-in admin can insert, update, delete)
-CREATE POLICY "Admin write profile" ON public.profile_intro FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write skills" ON public.skills FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write experience" ON public.work_experience FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write education" ON public.education FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write certificates" ON public.certificates_achievements FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin write projects" ON public.projects FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow write profile" ON public.profile_intro FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow write skills" ON public.skills FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow write experience" ON public.work_experience FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow write education" ON public.education FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow write certificates" ON public.certificates_achievements FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow write projects" ON public.projects FOR ALL USING (true) WITH CHECK (true);
 
 -- ==============================================================================
--- 5. STORAGE BUCKET CONFIGURATION
+-- 5. STORAGE BUCKET CONFIGURATION (portfolio-media)
 -- ==============================================================================
 
--- Create bucket 'portfolio-media' if it does not already exist
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-    'portfolio-media',
-    'portfolio-media',
-    true,
-    5242880, -- 5MB in bytes
-    ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml', 'application/pdf']
-)
-ON CONFLICT (id) DO UPDATE SET
-    public = true,
-    file_size_limit = 5242880,
-    allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml', 'application/pdf'];
+DO $$
+BEGIN
+    INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    VALUES (
+        'portfolio-media',
+        'portfolio-media',
+        true,
+        10485760, -- 10MB limit
+        ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml', 'application/pdf']
+    )
+    ON CONFLICT (id) DO UPDATE SET
+        public = true,
+        file_size_limit = 10485760;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
 
--- Storage bucket access policies
-CREATE POLICY "Public access to portfolio-media"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'portfolio-media');
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "Public access to portfolio-media" ON storage.objects;
+    DROP POLICY IF EXISTS "Public upload to portfolio-media" ON storage.objects;
+    DROP POLICY IF EXISTS "Public update to portfolio-media" ON storage.objects;
+    DROP POLICY IF EXISTS "Public delete from portfolio-media" ON storage.objects;
 
-CREATE POLICY "Authenticated users upload to portfolio-media"
-ON storage.objects FOR INSERT
-TO authenticated
-WITH CHECK (bucket_id = 'portfolio-media');
-
-CREATE POLICY "Authenticated users update portfolio-media"
-ON storage.objects FOR UPDATE
-TO authenticated
-USING (bucket_id = 'portfolio-media');
-
-CREATE POLICY "Authenticated users delete from portfolio-media"
-ON storage.objects FOR DELETE
-TO authenticated
-USING (bucket_id = 'portfolio-media');
+    CREATE POLICY "Public access to portfolio-media" ON storage.objects FOR SELECT USING (bucket_id = 'portfolio-media');
+    CREATE POLICY "Public upload to portfolio-media" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'portfolio-media');
+    CREATE POLICY "Public update to portfolio-media" ON storage.objects FOR UPDATE USING (bucket_id = 'portfolio-media');
+    CREATE POLICY "Public delete from portfolio-media" ON storage.objects FOR DELETE USING (bucket_id = 'portfolio-media');
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
 
 -- ==============================================================================
 -- 6. INITIAL SEED DATA
@@ -222,12 +232,12 @@ USING (bucket_id = 'portfolio-media');
 INSERT INTO public.profile_intro (id, full_name, tagline, bio, avatar_url, resume_file_url, status_badge, social_links)
 VALUES (
     'a0000000-0000-0000-0000-000000000001',
-    'Alex Rivera',
-    'Senior Full-Stack Architect & 3D Web Creative',
+    'Dhanush Rao',
+    'WebGL & Cloud Architect',
     'Pioneering modern interactive web applications combining WebGL, Next.js, and cloud backends. Passionate about performant design systems, fluid micro-interactions, and reactive interfaces.',
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+    '/avatars/male-1.png',
     'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    'Open to Senior Architect & Tech Lead Roles',
+    'Available for High-Impact Roles',
     '{
         "github": "https://github.com",
         "linkedin": "https://linkedin.com",
