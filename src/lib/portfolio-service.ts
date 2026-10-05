@@ -97,28 +97,11 @@ export async function fetchPortfolioData(): Promise<{
         supabase.from('projects').select('*').order('order_index', { ascending: true }),
       ]);
 
-      if (
-        !profileRes.error &&
-        !skillsRes.error &&
-        profileRes.data &&
-        skillsRes.data?.length
-      ) {
-        const local = getLocalStore();
-        // Check if localStore has newer edits than remote seed data
-        const localProfileUpdated = local.profile?.updated_at
-          ? new Date(local.profile.updated_at).getTime()
-          : 0;
-        const remoteProfileUpdated = profileRes.data?.updated_at
-          ? new Date(profileRes.data.updated_at).getTime()
-          : 0;
-
-        const effectiveProfile =
-          localProfileUpdated > remoteProfileUpdated ? local.profile : profileRes.data;
-
+      if (!profileRes.error && profileRes.data) {
         return {
           isLiveSupabase: true,
           data: {
-            profile: effectiveProfile,
+            profile: profileRes.data,
             skills: skillsRes.data || [],
             work_experience: expRes.data || [],
             education: eduRes.data || [],

@@ -15,7 +15,7 @@ export const initialPortfolioData: PortfolioData = {
       twitter: "https://twitter.com",
       instagram: "https://instagram.com",
     },
-    updated_at: new Date().toISOString(),
+    updated_at: "2024-01-01T00:00:00.000Z",
   },
   skills: [
     {
