@@ -13,6 +13,7 @@ import {
   ExternalLink,
   LogOut,
   Sparkles,
+  Code2,
   Database,
   Menu,
   X,
@@ -77,7 +78,7 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="admin-shell">
+    <div className="admin-shell" suppressHydrationWarning>
       {/* Sidebar */}
       <aside className={`admin-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
         {/* Brand header */}
@@ -107,7 +108,7 @@ export default function AdminLayout({
                 boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)',
               }}
             >
-              <Sparkles size={20} />
+              <Code2 size={20} strokeWidth={2.4} />
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff' }}>Portfolio CMS</div>

@@ -7,6 +7,7 @@ import { fetchPortfolioData, saveProfileIntro } from '@/lib/portfolio-service';
 import { ProfileIntro, SocialLinks } from '@/lib/types';
 import { initialPortfolioData } from '@/lib/mock-data';
 import { FileUploadZone } from '@/components/FileUploadZone';
+import { AvatarSelector } from '@/components/AvatarSelector';
 import { useToast } from '@/components/Toast';
 import { revalidatePortfolio } from '@/app/actions';
 
@@ -168,44 +169,37 @@ export default function AdminProfilePage() {
           </div>
         </div>
 
-        {/* Media & Documents Card */}
+        {/* 3D Animated Avatar Selection Card */}
         <div className="glass-panel" style={{ padding: '28px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
-            <FileText size={20} color="var(--cyan)" />
-            <h3 style={{ fontSize: '1.2rem' }}>Profile Picture & Resume Document</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            <Sparkles size={20} color="var(--cyan)" />
+            <h3 style={{ fontSize: '1.2rem' }}>Hero 3D Animated Figurine Avatar</h3>
           </div>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '20px' }}>
+            Select your 3D animated character figurine for the interactive 3D hero tilt card. Choose between 4 male and 4 female character designs.
+          </p>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: '24px',
-            }}
-          >
-            <div>
-              <FileUploadZone
-                label="Avatar / Profile Image"
-                value={profile.avatar_url}
-                onChange={(url) => handleChange('avatar_url', url)}
-                folder="avatars"
-                accept="image/png, image/jpeg, image/webp"
-                hint="Auto-converts to WebP. Recommended square 600x600px."
-                allowPdf={false}
-              />
-            </div>
+          <AvatarSelector
+            value={profile.avatar_url || '/avatars/male-1.png'}
+            onChange={(url) => handleChange('avatar_url', url)}
+          />
+        </div>
 
-            <div>
-              <FileUploadZone
-                label="Resume / Curriculum Vitae (PDF)"
-                value={profile.resume_file_url}
-                onChange={(url) => handleChange('resume_file_url', url)}
-                folder="documents"
-                accept="application/pdf"
-                hint="Upload official PDF resume (Max 5MB). Direct download on hero."
-                allowPdf={true}
-              />
-            </div>
+        {/* Resume & Curriculum Vitae Card */}
+        <div className="glass-panel" style={{ padding: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+            <FileText size={20} color="var(--primary-light)" />
+            <h3 style={{ fontSize: '1.2rem' }}>Resume & Curriculum Vitae (PDF)</h3>
           </div>
+          <FileUploadZone
+            label="Official Resume / CV Document"
+            value={profile.resume_file_url}
+            onChange={(url) => handleChange('resume_file_url', url)}
+            folder="documents"
+            accept="application/pdf"
+            hint="Upload official PDF resume (Max 5MB). Directly downloadable from hero section."
+            allowPdf={true}
+          />
         </div>
 
         {/* Social Links Card */}

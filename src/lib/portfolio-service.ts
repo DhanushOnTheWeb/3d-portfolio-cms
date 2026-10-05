@@ -12,7 +12,7 @@ import {
 
 const STORAGE_KEY = 'portfolio_cms_store_v1';
 
-// Helper to get client localStorage
+// Helper to get client localStorage safely and merge with defaults
 function getLocalStore(): PortfolioData {
   if (typeof window === 'undefined') {
     return initialPortfolioData;
@@ -23,7 +23,30 @@ function getLocalStore(): PortfolioData {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initialPortfolioData));
       return initialPortfolioData;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return {
+      profile: parsed.profile
+        ? {
+            ...initialPortfolioData.profile,
+            ...parsed.profile,
+            avatar_url:
+              parsed.profile.avatar_url && !parsed.profile.avatar_url.includes('unsplash.com')
+                ? parsed.profile.avatar_url
+                : '/avatars/male-1.png',
+          }
+        : initialPortfolioData.profile,
+      skills: Array.isArray(parsed.skills) ? parsed.skills : initialPortfolioData.skills,
+      work_experience: Array.isArray(parsed.work_experience)
+        ? parsed.work_experience
+        : initialPortfolioData.work_experience,
+      education: Array.isArray(parsed.education)
+        ? parsed.education
+        : initialPortfolioData.education,
+      certificates_achievements: Array.isArray(parsed.certificates_achievements)
+        ? parsed.certificates_achievements
+        : initialPortfolioData.certificates_achievements,
+      projects: Array.isArray(parsed.projects) ? parsed.projects : initialPortfolioData.projects,
+    };
   } catch (e) {
     console.error('Failed reading localStorage, using initial mock data', e);
     return initialPortfolioData;
@@ -34,6 +57,17 @@ function saveLocalStore(data: PortfolioData) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // Dispatch events for immediate reactivity in current tab and across tabs
+    window.dispatchEvent(new CustomEvent('portfolio_updated', { detail: data }));
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('portfolio_sync_channel');
+        bc.postMessage({ type: 'PORTFOLIO_UPDATED', timestamp: Date.now() });
+        bc.close();
+      } catch {
+        // ignore BroadcastChannel errors in unsupported environments
+      }
+    }
   } catch (e) {
     console.error('Failed writing to localStorage', e);
   }
@@ -69,10 +103,22 @@ export async function fetchPortfolioData(): Promise<{
         profileRes.data &&
         skillsRes.data?.length
       ) {
+        const local = getLocalStore();
+        // Check if localStore has newer edits than remote seed data
+        const localProfileUpdated = local.profile?.updated_at
+          ? new Date(local.profile.updated_at).getTime()
+          : 0;
+        const remoteProfileUpdated = profileRes.data?.updated_at
+          ? new Date(profileRes.data.updated_at).getTime()
+          : 0;
+
+        const effectiveProfile =
+          localProfileUpdated > remoteProfileUpdated ? local.profile : profileRes.data;
+
         return {
           isLiveSupabase: true,
           data: {
-            profile: profileRes.data,
+            profile: effectiveProfile,
             skills: skillsRes.data || [],
             work_experience: expRes.data || [],
             education: eduRes.data || [],
@@ -96,12 +142,12 @@ export async function fetchPortfolioData(): Promise<{
 // ==================== PROFILE MUTATIONS ====================
 
 export async function saveProfileIntro(profile: ProfileIntro): Promise<ProfileIntro> {
-  const supabase = createClient();
-  const updatedProfile = {
+  const updatedProfile: ProfileIntro = {
     ...profile,
     updated_at: new Date().toISOString(),
   };
 
+  const supabase = createClient();
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -109,7 +155,15 @@ export async function saveProfileIntro(profile: ProfileIntro): Promise<ProfileIn
         .upsert(updatedProfile)
         .select()
         .single();
-      if (!error && data) return data;
+      if (!error && data) {
+        const store = getLocalStore();
+        store.profile = data;
+        saveLocalStore(store);
+        return data;
+      }
+      if (error) {
+        console.warn('Supabase profile update rejected (check RLS / Auth):', error.message);
+      }
     } catch (e) {
       console.warn('Supabase profile update fallback', e);
     }
@@ -124,8 +178,7 @@ export async function saveProfileIntro(profile: ProfileIntro): Promise<ProfileIn
 // ==================== SKILLS MUTATIONS ====================
 
 export async function saveSkill(skill: Partial<Skill>): Promise<Skill> {
-  const supabase = createClient();
-  const isNew = !skill.id || skill.id.startsWith('s_temp_') || skill.id.length < 5;
+  const isNew = !skill.id || skill.id.startsWith('s_temp_') || skill.id === 'new';
   const targetId = isNew ? `skill_${Date.now()}` : skill.id!;
 
   const skillRecord: Skill = {
@@ -139,6 +192,7 @@ export async function saveSkill(skill: Partial<Skill>): Promise<Skill> {
     updated_at: new Date().toISOString(),
   };
 
+  const supabase = createClient();
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -146,7 +200,17 @@ export async function saveSkill(skill: Partial<Skill>): Promise<Skill> {
         .upsert(skillRecord)
         .select()
         .single();
-      if (!error && data) return data;
+      if (!error && data) {
+        const store = getLocalStore();
+        const index = store.skills.findIndex((s) => s.id === data.id);
+        if (index >= 0) store.skills[index] = data;
+        else store.skills.push(data);
+        saveLocalStore(store);
+        return data;
+      }
+      if (error) {
+        console.warn('Supabase skill update rejected (check RLS / Auth):', error.message);
+      }
     } catch (e) {
       console.warn('Supabase skill upsert fallback', e);
     }
@@ -180,13 +244,13 @@ export async function removeSkill(id: string): Promise<boolean> {
 }
 
 export async function saveSkillOrders(skills: Skill[]): Promise<void> {
-  const supabase = createClient();
   const updated = skills.map((s, index) => ({
     ...s,
     order_index: index + 1,
     updated_at: new Date().toISOString(),
   }));
 
+  const supabase = createClient();
   if (supabase) {
     try {
       await supabase.from('skills').upsert(updated);
@@ -203,8 +267,7 @@ export async function saveSkillOrders(skills: Skill[]): Promise<void> {
 // ==================== PROJECTS MUTATIONS ====================
 
 export async function saveProject(project: Partial<Project>): Promise<Project> {
-  const supabase = createClient();
-  const isNew = !project.id || project.id.startsWith('p_temp_') || project.id.length < 5;
+  const isNew = !project.id || project.id.startsWith('p_temp_') || project.id === 'new';
   const targetId = isNew ? `proj_${Date.now()}` : project.id!;
 
   const record: Project = {
@@ -222,6 +285,7 @@ export async function saveProject(project: Partial<Project>): Promise<Project> {
     updated_at: new Date().toISOString(),
   };
 
+  const supabase = createClient();
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -229,7 +293,17 @@ export async function saveProject(project: Partial<Project>): Promise<Project> {
         .upsert(record)
         .select()
         .single();
-      if (!error && data) return data;
+      if (!error && data) {
+        const store = getLocalStore();
+        const index = store.projects.findIndex((p) => p.id === data.id);
+        if (index >= 0) store.projects[index] = data;
+        else store.projects.push(data);
+        saveLocalStore(store);
+        return data;
+      }
+      if (error) {
+        console.warn('Supabase project update rejected (check RLS / Auth):', error.message);
+      }
     } catch (e) {
       console.warn('Supabase project upsert fallback', e);
     }
@@ -263,13 +337,13 @@ export async function removeProject(id: string): Promise<boolean> {
 }
 
 export async function saveProjectOrders(projects: Project[]): Promise<void> {
-  const supabase = createClient();
   const updated = projects.map((p, index) => ({
     ...p,
     order_index: index + 1,
     updated_at: new Date().toISOString(),
   }));
 
+  const supabase = createClient();
   if (supabase) {
     try {
       await supabase.from('projects').upsert(updated);
@@ -286,8 +360,7 @@ export async function saveProjectOrders(projects: Project[]): Promise<void> {
 // ==================== WORK EXPERIENCE MUTATIONS ====================
 
 export async function saveExperience(exp: Partial<WorkExperience>): Promise<WorkExperience> {
-  const supabase = createClient();
-  const isNew = !exp.id || exp.id.startsWith('w_temp_') || exp.id.length < 5;
+  const isNew = !exp.id || exp.id.startsWith('w_temp_') || exp.id === 'new';
   const targetId = isNew ? `exp_${Date.now()}` : exp.id!;
 
   const record: WorkExperience = {
@@ -305,6 +378,7 @@ export async function saveExperience(exp: Partial<WorkExperience>): Promise<Work
     updated_at: new Date().toISOString(),
   };
 
+  const supabase = createClient();
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -312,7 +386,17 @@ export async function saveExperience(exp: Partial<WorkExperience>): Promise<Work
         .upsert(record)
         .select()
         .single();
-      if (!error && data) return data;
+      if (!error && data) {
+        const store = getLocalStore();
+        const index = store.work_experience.findIndex((w) => w.id === data.id);
+        if (index >= 0) store.work_experience[index] = data;
+        else store.work_experience.push(data);
+        saveLocalStore(store);
+        return data;
+      }
+      if (error) {
+        console.warn('Supabase experience update rejected (check RLS / Auth):', error.message);
+      }
     } catch (e) {
       console.warn('Supabase experience upsert fallback', e);
     }
@@ -369,8 +453,7 @@ export async function saveExperienceOrders(items: WorkExperience[]): Promise<voi
 // ==================== EDUCATION MUTATIONS ====================
 
 export async function saveEducation(edu: Partial<Education>): Promise<Education> {
-  const supabase = createClient();
-  const isNew = !edu.id || edu.id.startsWith('e_temp_') || edu.id.length < 5;
+  const isNew = !edu.id || edu.id.startsWith('e_temp_') || edu.id === 'new';
   const targetId = isNew ? `edu_${Date.now()}` : edu.id!;
 
   const record: Education = {
@@ -386,6 +469,7 @@ export async function saveEducation(edu: Partial<Education>): Promise<Education>
     updated_at: new Date().toISOString(),
   };
 
+  const supabase = createClient();
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -393,7 +477,17 @@ export async function saveEducation(edu: Partial<Education>): Promise<Education>
         .upsert(record)
         .select()
         .single();
-      if (!error && data) return data;
+      if (!error && data) {
+        const store = getLocalStore();
+        const index = store.education.findIndex((e) => e.id === data.id);
+        if (index >= 0) store.education[index] = data;
+        else store.education.push(data);
+        saveLocalStore(store);
+        return data;
+      }
+      if (error) {
+        console.warn('Supabase education update rejected (check RLS / Auth):', error.message);
+      }
     } catch (e) {
       console.warn('Supabase education upsert fallback', e);
     }
@@ -450,8 +544,7 @@ export async function saveEducationOrders(items: Education[]): Promise<void> {
 // ==================== CERTIFICATES & AWARDS MUTATIONS ====================
 
 export async function saveCertificate(cert: Partial<CertificateAchievement>): Promise<CertificateAchievement> {
-  const supabase = createClient();
-  const isNew = !cert.id || cert.id.startsWith('c_temp_') || cert.id.length < 5;
+  const isNew = !cert.id || cert.id.startsWith('c_temp_') || cert.id === 'new';
   const targetId = isNew ? `cert_${Date.now()}` : cert.id!;
 
   const record: CertificateAchievement = {
@@ -468,6 +561,7 @@ export async function saveCertificate(cert: Partial<CertificateAchievement>): Pr
     updated_at: new Date().toISOString(),
   };
 
+  const supabase = createClient();
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -475,7 +569,17 @@ export async function saveCertificate(cert: Partial<CertificateAchievement>): Pr
         .upsert(record)
         .select()
         .single();
-      if (!error && data) return data;
+      if (!error && data) {
+        const store = getLocalStore();
+        const index = store.certificates_achievements.findIndex((c) => c.id === data.id);
+        if (index >= 0) store.certificates_achievements[index] = data;
+        else store.certificates_achievements.push(data);
+        saveLocalStore(store);
+        return data;
+      }
+      if (error) {
+        console.warn('Supabase certificate update rejected (check RLS / Auth):', error.message);
+      }
     } catch (e) {
       console.warn('Supabase cert upsert fallback', e);
     }
@@ -533,6 +637,7 @@ export async function saveCertificateOrders(items: CertificateAchievement[]): Pr
 export function resetPortfolioToDefault(): PortfolioData {
   if (typeof window !== 'undefined') {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(initialPortfolioData));
+    window.dispatchEvent(new CustomEvent('portfolio_updated', { detail: initialPortfolioData }));
   }
   return initialPortfolioData;
 }

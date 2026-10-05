@@ -6,7 +6,7 @@ export const initialPortfolioData: PortfolioData = {
     full_name: "Alex Rivera",
     tagline: "Senior Full-Stack Architect & 3D Web Creative",
     bio: "Pioneering modern interactive web applications combining WebGL, Next.js, and cloud backends. Passionate about performant design systems, fluid micro-interactions, and reactive interfaces.",
-    avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80",
+    avatar_url: "/avatars/male-1.png",
     resume_file_url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
     status_badge: "Open to High-Impact Leadership Roles",
     social_links: {

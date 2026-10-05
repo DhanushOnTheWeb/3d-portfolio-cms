@@ -301,3 +301,19 @@ button, input, select, textarea {
     padding: 20px 16px;
   }
 }
+
+/* Floating 3D Character Figurine */
+@keyframes float3DCharacter {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(0.8deg);
+  }
+}
+
+.floating-3d-character {
+  animation: float3DCharacter 4.5s ease-in-out infinite;
+  will-change: transform;
+}
+

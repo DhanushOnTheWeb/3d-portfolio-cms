@@ -279,7 +279,7 @@ export default function AdminDashboardPage() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Plus size={16} color="var(--primary-light)" />
-                <span>Upload New 3D Project Showcase</span>
+                <span>Upload New Project Showcase</span>
               </div>
               <ArrowUpRight size={15} color="var(--text-muted)" />
             </Link>

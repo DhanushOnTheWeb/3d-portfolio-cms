@@ -178,7 +178,7 @@ export default function AdminProjectsPage() {
       >
         <div>
           <h1 style={{ fontSize: '1.85rem', marginBottom: '4px' }}>
-            3D Projects <span className="gradient-text">Showcase Manager</span>
+            Projects <span className="gradient-text">Showcase Manager</span>
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             Create, edit, reorder, and toggle live/draft visibility for 3D spatial project cards.
@@ -433,7 +433,7 @@ export default function AdminProjectsPage() {
               }}
             >
               <h2 style={{ fontSize: '1.35rem' }}>
-                {editingProject.id ? 'Edit 3D Project' : 'Create 3D Project'}
+                {editingProject.id ? 'Edit Project' : 'Create Project'}
               </h2>
               <button
                 type="button"

@@ -5,7 +5,10 @@ import { cookies } from 'next/headers';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function revalidatePortfolio(targetPath: string = '/') {
-  revalidatePath(targetPath);
+  revalidatePath('/');
+  if (targetPath && targetPath !== '/') {
+    revalidatePath(targetPath);
+  }
   revalidatePath('/admin');
   revalidatePath('/admin/dashboard');
   revalidatePath('/admin/projects');

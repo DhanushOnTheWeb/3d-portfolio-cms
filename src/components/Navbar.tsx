@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Shield, Sparkles, Menu, X, ArrowUpRight, Code, Briefcase, GraduationCap, Award, User } from 'lucide-react';
+import { Shield, Code2, Sparkles, Menu, X, ArrowUpRight, Code, Briefcase, GraduationCap, Award, User } from 'lucide-react';
 
 interface NavbarProps {
   fullName?: string;
@@ -76,12 +76,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)',
             }}
           >
-            <Sparkles size={18} />
+            <Code2 size={20} strokeWidth={2.4} />
           </div>
           <div>
             <span className="gradient-text" style={{ fontWeight: 800 }}>{fullName}</span>
             <div style={{ fontSize: '0.65rem', color: 'var(--cyan)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              3D Spatial Portfolio
+              Portfolio
             </div>
           </div>
         </Link>
@@ -117,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onMouseOver={(e) => (e.currentTarget.style.color = '#fff')}
             onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
           >
-            3D Projects
+            Projects
           </a>
           <a
             href="#skills"
@@ -242,7 +242,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setMobileMenuOpen(false)}
             style={{ color: '#f1f5f9', fontSize: '1rem', padding: '8px 0' }}
           >
-            3D Projects Showcase
+            Projects Showcase
           </a>
           <a
             href="#skills"

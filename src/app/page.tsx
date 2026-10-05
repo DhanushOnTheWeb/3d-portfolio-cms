@@ -39,13 +39,74 @@ export default function PortfolioPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPortfolioData().then((res) => {
-      setData(res.data);
-      setLoading(false);
-    });
+    let isMounted = true;
+
+    const loadData = () => {
+      fetchPortfolioData().then((res) => {
+        if (isMounted) {
+          setData(res.data);
+          setLoading(false);
+        }
+      });
+    };
+
+    // 1. Initial mount load
+    loadData();
+
+    // 2. Storage event listener (fires across other tabs on same origin)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'portfolio_cms_store_v1' || !e.key) {
+        loadData();
+      }
+    };
+
+    // 3. Custom event listener (fires in the same tab/window)
+    const handleCustomUpdate = () => {
+      loadData();
+    };
+
+    // 4. Focus & visibility change (when switching back to this tab)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('portfolio_updated', handleCustomUpdate);
+    window.addEventListener('focus', loadData);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // 5. BroadcastChannel for instant inter-tab signaling
+    let bc: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        bc = new BroadcastChannel('portfolio_sync_channel');
+        bc.onmessage = () => loadData();
+      } catch {
+        // BroadcastChannel optional fallback
+      }
+    }
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('portfolio_updated', handleCustomUpdate);
+      window.removeEventListener('focus', loadData);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (bc) {
+        bc.close();
+      }
+    };
   }, []);
 
   const { profile, skills, work_experience, education, certificates_achievements, projects } = data;
+
+  // Dynamically update document title based on profile full name from admin panel
+  useEffect(() => {
+    const name = profile?.full_name?.trim();
+    document.title = name ? `${name} | Portfolio` : 'Portfolio';
+  }, [profile?.full_name]);
 
   // Filter visible items
   const visibleProjects = (projects || [])
@@ -72,6 +133,7 @@ export default function PortfolioPage() {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', overflowX: 'hidden' }}>
+      <title>{profile?.full_name?.trim() ? `${profile.full_name.trim()} | Portfolio` : 'Portfolio'}</title>
       {/* Interactive 3D Spatial Three.js Background */}
       <ThreeCanvas />
 
@@ -166,7 +228,7 @@ export default function PortfolioPage() {
                     gap: '8px',
                   }}
                 >
-                  <span>Explore 3D Projects</span>
+                  <span>Explore Projects</span>
                   <ArrowRight size={16} />
                 </a>
 
@@ -321,77 +383,65 @@ export default function PortfolioPage() {
               </div>
             </div>
 
-            {/* Right Column: 3D Holographic Avatar Card */}
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <TiltCard
-                maxTilt={12}
+            {/* Right Column: Transparent 3D Character (No Card, No Background) */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                position: 'relative',
+                minHeight: '440px',
+              }}
+            >
+              {/* Soft ambient lighting glow behind character */}
+              <div
                 style={{
-                  maxWidth: '420px',
-                  width: '100%',
-                  borderRadius: 'var(--radius-xl)',
-                  padding: '16px',
-                  background: 'rgba(15, 19, 38, 0.75)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  boxShadow: '0 25px 60px -15px rgba(0,0,0,0.8), 0 0 50px rgba(99, 102, 241, 0.2)',
+                  position: 'absolute',
+                  width: '320px',
+                  height: '320px',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(6, 182, 212, 0.12) 45%, transparent 70%)',
+                  filter: 'blur(40px)',
+                  pointerEvents: 'none',
+                  zIndex: 0,
                 }}
-              >
-                <div
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    paddingTop: '110%',
-                    borderRadius: 'var(--radius-lg)',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={profile.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'}
-                    alt={profile.full_name}
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      filter: 'contrast(1.05) brightness(1.02)',
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      background: 'linear-gradient(180deg, transparent 50%, rgba(7, 9, 19, 0.95) 100%)',
-                      pointerEvents: 'none',
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '16px',
-                      left: '16px',
-                      right: '16px',
-                    }}
-                  >
-                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>
-                      {profile.full_name}
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--cyan)' }}>
-                      WebGL & Cloud Architect
-                    </div>
-                  </div>
-                </div>
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '-10px',
+                  width: '280px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(ellipse, rgba(6, 182, 212, 0.4) 0%, rgba(99, 102, 241, 0.15) 50%, transparent 80%)',
+                  filter: 'blur(10px)',
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                }}
+              />
 
-                <div style={{ padding: '14px 8px 4px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    3D Spatial Portfolio Core
-                  </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
-                    <span style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 600 }}>Active</span>
-                  </div>
-                </div>
-              </TiltCard>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={
+                  profile.avatar_url && !profile.avatar_url.includes('unsplash.com')
+                    ? profile.avatar_url
+                    : '/avatars/male-1.png'
+                }
+                alt={profile.full_name || '3D Avatar'}
+                className="floating-3d-character"
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  maxWidth: '380px',
+                  width: '100%',
+                  height: 'auto',
+                  maxHeight: '470px',
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 20px 30px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 25px rgba(99, 102, 241, 0.25))',
+                  userSelect: 'none',
+                  pointerEvents: 'auto',
+                }}
+              />
             </div>
           </div>
         </section>
@@ -415,7 +465,7 @@ export default function PortfolioPage() {
                 <FolderGit2 size={16} /> Selected Engineering Works
               </div>
               <h2 style={{ fontSize: 'clamp(2rem, 3.8vw, 2.8rem)' }}>
-                Interactive <span className="gradient-text">3D Project Gallery</span>
+                Interactive <span className="gradient-text">Projects Gallery</span>
               </h2>
             </div>
 
