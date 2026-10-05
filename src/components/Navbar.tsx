@@ -10,7 +10,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  fullName = 'Alex Rivera',
+  fullName = 'Dhanush Rao',
   statusBadge = 'Open to Work',
 }) => {
   const [scrolled, setScrolled] = useState(false);

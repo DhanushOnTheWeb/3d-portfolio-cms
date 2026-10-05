@@ -15,10 +15,10 @@ export const metadata: Metadata = {
     'React',
     'TypeScript',
   ],
-  authors: [{ name: 'Alex Rivera' }],
+  authors: [{ name: 'Dhanush Rao' }],
   openGraph: {
-    title: 'Alex Rivera | 3D Interactive Portfolio & CMS',
-    description: 'Dynamic 3D spatial portfolio with Supabase-backed Admin Dashboard.',
+    title: 'Dhanush Rao | Portfolio',
+    description: 'Dynamic portfolio with Supabase-backed Admin Dashboard.',
     type: 'website',
   },
 };

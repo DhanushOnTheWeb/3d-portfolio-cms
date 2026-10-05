@@ -3,8 +3,8 @@ import { PortfolioData } from "./types";
 export const initialPortfolioData: PortfolioData = {
   profile: {
     id: "a0000000-0000-0000-0000-000000000001",
-    full_name: "Alex Rivera",
-    tagline: "Senior Full-Stack Architect & 3D Web Creative",
+    full_name: "Dhanush Rao",
+    tagline: "WebGL & Cloud Architect",
     bio: "Pioneering modern interactive web applications combining WebGL, Next.js, and cloud backends. Passionate about performant design systems, fluid micro-interactions, and reactive interfaces.",
     avatar_url: "/avatars/male-1.png",
     resume_file_url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
