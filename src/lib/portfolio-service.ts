@@ -97,11 +97,11 @@ export async function fetchPortfolioData(): Promise<{
         supabase.from('projects').select('*').order('order_index', { ascending: true }),
       ]);
 
-      if (!profileRes.error && profileRes.data) {
+      if (!profileRes.error) {
         return {
           isLiveSupabase: true,
           data: {
-            profile: profileRes.data,
+            profile: profileRes.data || initialPortfolioData.profile,
             skills: skillsRes.data || [],
             work_experience: expRes.data || [],
             education: eduRes.data || [],

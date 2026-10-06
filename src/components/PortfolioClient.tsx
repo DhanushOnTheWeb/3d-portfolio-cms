@@ -523,14 +523,34 @@ export function PortfolioClient({ initialData }: PortfolioClientProps) {
           </div>
 
           {/* Project Grid */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-              gap: '28px',
-            }}
-          >
-            {visibleProjects.map((proj) => (
+          {visibleProjects.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '50px 24px',
+                borderRadius: 'var(--radius-lg)',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px dashed var(--border-dim)',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <FolderGit2 size={36} style={{ margin: '0 auto 12px auto', opacity: 0.5 }} />
+              <p style={{ fontSize: '1rem', color: '#f1f5f9', fontWeight: 600, marginBottom: '6px' }}>
+                No projects published yet
+              </p>
+              <p style={{ fontSize: '0.85rem' }}>
+                Add and manage projects in the Admin CMS to showcase them here.
+              </p>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                gap: '28px',
+              }}
+            >
+              {visibleProjects.map((proj) => (
               <TiltCard
                 key={proj.id}
                 maxTilt={8}
@@ -688,6 +708,7 @@ export function PortfolioClient({ initialData }: PortfolioClientProps) {
               </TiltCard>
             ))}
           </div>
+        )}
         </section>
 
         {/* =========================================================================
@@ -745,84 +766,105 @@ export function PortfolioClient({ initialData }: PortfolioClientProps) {
           </div>
 
           {/* Skills Grid */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))',
-              gap: '20px',
-            }}
-          >
-            {visibleSkills.map((s) => (
-              <div
-                key={s.id}
-                className="glass-panel glass-panel-hover"
-                style={{
-                  padding: '22px',
-                  borderRadius: 'var(--radius-md)',
-                  background: 'rgba(15, 19, 36, 0.7)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
-                  <div
-                    style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '12px',
-                      background: 'rgba(255, 255, 255, 0.06)',
-                      border: '1px solid var(--border-dim)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {s.icon_url ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={s.icon_url}
-                        alt={s.name}
-                        style={{ width: '24px', height: '24px', objectFit: 'contain' }}
-                      />
-                    ) : (
-                      <Cpu size={20} color="var(--cyan)" />
-                    )}
-                  </div>
-                  <div>
-                    <h4 style={{ fontSize: '1rem', color: '#f8fafc', marginBottom: '2px' }}>{s.name}</h4>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                      {s.category.replace('_', ' ')}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Progress bar */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '6px' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Proficiency</span>
-                    <span style={{ fontWeight: 700, color: 'var(--cyan)' }}>{s.proficiency_level}%</span>
-                  </div>
-                  <div
-                    style={{
-                      height: '6px',
-                      width: '100%',
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      borderRadius: '999px',
-                      overflow: 'hidden',
-                    }}
-                  >
+          {visibleSkills.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '44px 24px',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px dashed var(--border-dim)',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <Cpu size={32} style={{ margin: '0 auto 10px auto', opacity: 0.5 }} />
+              <p style={{ fontSize: '0.95rem', color: '#f1f5f9', fontWeight: 600, marginBottom: '4px' }}>
+                No skills listed yet
+              </p>
+              <p style={{ fontSize: '0.825rem' }}>
+                Configure your technical competencies in the Admin CMS.
+              </p>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))',
+                gap: '20px',
+              }}
+            >
+              {visibleSkills.map((s) => (
+                <div
+                  key={s.id}
+                  className="glass-panel glass-panel-hover"
+                  style={{
+                    padding: '22px',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'rgba(15, 19, 36, 0.7)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
                     <div
                       style={{
-                        height: '100%',
-                        width: `${s.proficiency_level}%`,
-                        background: 'linear-gradient(90deg, #6366f1, #06b6d4)',
-                        borderRadius: '999px',
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '12px',
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        border: '1px solid var(--border-dim)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
                       }}
-                    />
+                    >
+                      {s.icon_url ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={s.icon_url}
+                          alt={s.name}
+                          style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                        />
+                      ) : (
+                        <Cpu size={20} color="var(--cyan)" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: '1rem', color: '#f8fafc', marginBottom: '2px' }}>{s.name}</h4>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                        {s.category.replace('_', ' ')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '6px' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Proficiency</span>
+                      <span style={{ fontWeight: 700, color: 'var(--cyan)' }}>{s.proficiency_level}%</span>
+                    </div>
+                    <div
+                      style={{
+                        height: '6px',
+                        width: '100%',
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        borderRadius: '999px',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${s.proficiency_level}%`,
+                          background: 'linear-gradient(90deg, #6366f1, #06b6d4)',
+                          borderRadius: '999px',
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* =========================================================================
@@ -852,61 +894,67 @@ export function PortfolioClient({ initialData }: PortfolioClientProps) {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {visibleExp.map((exp) => (
-                  <div
-                    key={exp.id}
-                    className="glass-panel"
-                    style={{
-                      padding: '24px',
-                      borderRadius: 'var(--radius-lg)',
-                      borderLeft: exp.is_current ? '4px solid var(--emerald)' : '1px solid var(--border-dim)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                      <h3 style={{ fontSize: '1.15rem' }}>{exp.role}</h3>
-                      {exp.is_current && (
-                        <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '999px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', fontWeight: 600 }}>
-                          Present
+                {visibleExp.length === 0 ? (
+                  <div style={{ padding: '28px', textAlign: 'center', borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border-dim)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                    No work experience entries added yet.
+                  </div>
+                ) : (
+                  visibleExp.map((exp) => (
+                    <div
+                      key={exp.id}
+                      className="glass-panel"
+                      style={{
+                        padding: '24px',
+                        borderRadius: 'var(--radius-lg)',
+                        borderLeft: exp.is_current ? '4px solid var(--emerald)' : '1px solid var(--border-dim)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                        <h3 style={{ fontSize: '1.15rem' }}>{exp.role}</h3>
+                        {exp.is_current && (
+                          <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '999px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', fontWeight: 600 }}>
+                            Present
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ color: 'var(--cyan)', fontWeight: 600, fontSize: '0.95rem', marginBottom: '10px' }}>
+                        {exp.company}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Calendar size={13} /> {exp.start_date} &ndash; {exp.is_current ? 'Present' : exp.end_date}
                         </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <MapPin size={13} /> {exp.location}
+                        </span>
+                      </div>
+
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+                        {exp.description}
+                      </p>
+
+                      {exp.certificate_url && (
+                        <a
+                          href={exp.certificate_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            marginTop: '14px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontSize: '0.8rem',
+                            color: 'var(--primary-light)',
+                          }}
+                        >
+                          <FileText size={14} /> Verification Document
+                        </a>
                       )}
                     </div>
-
-                    <div style={{ color: 'var(--cyan)', fontWeight: 600, fontSize: '0.95rem', marginBottom: '10px' }}>
-                      {exp.company}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Calendar size={13} /> {exp.start_date} &ndash; {exp.is_current ? 'Present' : exp.end_date}
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <MapPin size={13} /> {exp.location}
-                      </span>
-                    </div>
-
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-                      {exp.description}
-                    </p>
-
-                    {exp.certificate_url && (
-                      <a
-                        href={exp.certificate_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          marginTop: '14px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '0.8rem',
-                          color: 'var(--primary-light)',
-                        }}
-                      >
-                        <FileText size={14} /> Verification Document
-                      </a>
-                    )}
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -919,37 +967,43 @@ export function PortfolioClient({ initialData }: PortfolioClientProps) {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {visibleEdu.map((edu) => (
-                  <div
-                    key={edu.id}
-                    className="glass-panel"
-                    style={{
-                      padding: '24px',
-                      borderRadius: 'var(--radius-lg)',
-                      borderLeft: '4px solid var(--cyan)',
-                    }}
-                  >
-                    <h3 style={{ fontSize: '1.15rem', marginBottom: '4px' }}>{edu.degree}</h3>
-                    <div style={{ color: 'var(--primary-light)', fontWeight: 600, fontSize: '0.95rem', marginBottom: '10px' }}>
-                      {edu.institution}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                      <span>
-                        <Calendar size={13} style={{ display: 'inline', verticalAlign: '-2px' }} /> {edu.start_year} &ndash; {edu.end_year}
-                      </span>
-                      {edu.score_or_cgpa && (
-                        <span style={{ color: 'var(--emerald)', fontWeight: 600 }}>
-                          CGPA: {edu.score_or_cgpa}
-                        </span>
-                      )}
-                    </div>
-
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-                      {edu.description}
-                    </p>
+                {visibleEdu.length === 0 ? (
+                  <div style={{ padding: '28px', textAlign: 'center', borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border-dim)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                    No academic degree entries added yet.
                   </div>
-                ))}
+                ) : (
+                  visibleEdu.map((edu) => (
+                    <div
+                      key={edu.id}
+                      className="glass-panel"
+                      style={{
+                        padding: '24px',
+                        borderRadius: 'var(--radius-lg)',
+                        borderLeft: '4px solid var(--cyan)',
+                      }}
+                    >
+                      <h3 style={{ fontSize: '1.15rem', marginBottom: '4px' }}>{edu.degree}</h3>
+                      <div style={{ color: 'var(--primary-light)', fontWeight: 600, fontSize: '0.95rem', marginBottom: '10px' }}>
+                        {edu.institution}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                        <span>
+                          <Calendar size={13} style={{ display: 'inline', verticalAlign: '-2px' }} /> {edu.start_year} &ndash; {edu.end_year}
+                        </span>
+                        {edu.score_or_cgpa && (
+                          <span style={{ color: 'var(--emerald)', fontWeight: 600 }}>
+                            CGPA: {edu.score_or_cgpa}
+                          </span>
+                        )}
+                      </div>
+
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+                        {edu.description}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -966,133 +1020,154 @@ export function PortfolioClient({ initialData }: PortfolioClientProps) {
             Certificates & <span className="gradient-text">Honors</span>
           </h2>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-              gap: '24px',
-            }}
-          >
-            {visibleCerts.map((c) => (
-              <div
-                key={c.id}
-                className="glass-panel glass-panel-hover"
-                style={{
-                  padding: '24px',
-                  borderRadius: 'var(--radius-lg)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  borderLeft: `4px solid ${
-                    c.type === 'award'
-                      ? 'var(--amber)'
-                      : c.type === 'merit'
-                      ? 'var(--cyan)'
-                      : 'var(--emerald)'
-                  }`,
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                    <span
-                      style={{
-                        fontSize: '0.72rem',
-                        textTransform: 'uppercase',
-                        padding: '3px 10px',
-                        borderRadius: '999px',
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        color: 'var(--cyan)',
-                        fontWeight: 600,
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      {c.type}
-                    </span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.issue_date}</span>
-                  </div>
-
-                  <h3 style={{ fontSize: '1.15rem', marginBottom: '6px' }}>{c.title}</h3>
-                  <div style={{ fontSize: '0.875rem', color: '#cbd5e1', marginBottom: '14px' }}>
-                    Issued by <strong>{c.issuer}</strong>
-                  </div>
-
-                  {c.lor_loa_urls && c.lor_loa_urls.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
-                      {c.lor_loa_urls.map((link, idx) => (
-                        <a
-                          key={idx}
-                          href={link.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            fontSize: '0.75rem',
-                            padding: '3px 8px',
-                            borderRadius: '6px',
-                            background: 'rgba(99, 102, 241, 0.12)',
-                            color: 'var(--primary-light)',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}
-                        >
-                          <FileText size={11} />
-                          <span>{link.label}</span>
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
+          {visibleCerts.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '44px 24px',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px dashed var(--border-dim)',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <Award size={32} style={{ margin: '0 auto 10px auto', opacity: 0.5 }} />
+              <p style={{ fontSize: '0.95rem', color: '#f1f5f9', fontWeight: 600, marginBottom: '4px' }}>
+                No certificates or awards added yet
+              </p>
+              <p style={{ fontSize: '0.825rem' }}>
+                Upload certificates and honors in the Admin CMS to showcase them here.
+              </p>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+                gap: '24px',
+              }}
+            >
+              {visibleCerts.map((c) => (
                 <div
+                  key={c.id}
+                  className="glass-panel glass-panel-hover"
                   style={{
+                    padding: '24px',
+                    borderRadius: 'var(--radius-lg)',
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: 'column',
                     justifyContent: 'space-between',
-                    paddingTop: '16px',
-                    borderTop: '1px solid var(--border-dim)',
+                    borderLeft: `4px solid ${
+                      c.type === 'award'
+                        ? 'var(--amber)'
+                        : c.type === 'merit'
+                        ? 'var(--cyan)'
+                        : 'var(--emerald)'
+                    }`,
                   }}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCert(c)}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                      <span
+                        style={{
+                          fontSize: '0.72rem',
+                          textTransform: 'uppercase',
+                          padding: '3px 10px',
+                          borderRadius: '999px',
+                          background: 'rgba(255, 255, 255, 0.06)',
+                          color: 'var(--cyan)',
+                          fontWeight: 600,
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        {c.type}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.issue_date}</span>
+                    </div>
+
+                    <h3 style={{ fontSize: '1.15rem', marginBottom: '6px' }}>{c.title}</h3>
+                    <div style={{ fontSize: '0.875rem', color: '#cbd5e1', marginBottom: '14px' }}>
+                      Issued by <strong>{c.issuer}</strong>
+                    </div>
+
+                    {c.lor_loa_urls && c.lor_loa_urls.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+                        {c.lor_loa_urls.map((link, idx) => (
+                          <a
+                            key={idx}
+                            href={link.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              fontSize: '0.75rem',
+                              padding: '3px 8px',
+                              borderRadius: '6px',
+                              background: 'rgba(99, 102, 241, 0.12)',
+                              color: 'var(--primary-light)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                          >
+                            <FileText size={11} />
+                            <span>{link.label}</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--primary-light)',
-                      fontSize: '0.825rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px',
+                      justifyContent: 'space-between',
+                      paddingTop: '16px',
+                      borderTop: '1px solid var(--border-dim)',
                     }}
                   >
-                    View Credential <ArrowRight size={13} />
-                  </button>
-
-                  {c.credential_url && (
-                    <a
-                      href={c.credential_url}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCert(c)}
                       style={{
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        color: 'var(--text-secondary)',
-                        fontSize: '0.78rem',
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--primary-light)',
+                        fontSize: '0.825rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '4px',
                       }}
                     >
-                      <ExternalLink size={12} /> Verify Link
-                    </a>
-                  )}
+                      View Credential <ArrowRight size={13} />
+                    </button>
+
+                    {c.credential_url && (
+                      <a
+                        href={c.credential_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          color: 'var(--text-secondary)',
+                          fontSize: '0.78rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        <ExternalLink size={12} /> Verify Link
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Footer */}

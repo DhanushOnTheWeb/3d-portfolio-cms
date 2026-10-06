@@ -1,5 +1,6 @@
 -- ==============================================================================
--- 3D PORTFOLIO & CMS: DATABASE SCHEMA & SEED SCRIPT
+-- 3D PORTFOLIO & CMS: DATABASE SCHEMA (CLEAN / NO DUMMY VALUES)
+-- Only user created or modified data will be stored and displayed.
 -- ==============================================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -16,12 +17,12 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE IF NOT EXISTS public.profile_intro (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     full_name TEXT NOT NULL DEFAULT 'Dhanush Rao',
-    tagline TEXT NOT NULL DEFAULT 'WebGL & Cloud Architect',
-    bio TEXT NOT NULL DEFAULT 'Crafting hyper-interactive digital experiences with Next.js, Three.js, and cloud architectures.',
+    tagline TEXT DEFAULT '',
+    bio TEXT DEFAULT '',
     avatar_url TEXT DEFAULT '/avatars/male-1.png',
     resume_file_url TEXT DEFAULT '',
-    status_badge TEXT DEFAULT 'Available for High-Impact Roles',
-    social_links JSONB DEFAULT '{"github":"https://github.com","linkedin":"https://linkedin.com"}'::jsonb,
+    status_badge TEXT DEFAULT '',
+    social_links JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -58,9 +59,9 @@ CREATE TABLE IF NOT EXISTS public.education (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     institution TEXT NOT NULL,
     degree TEXT NOT NULL,
-    score_or_cgpa TEXT DEFAULT '3.9 GPA',
-    start_year TEXT NOT NULL DEFAULT '2019',
-    end_year TEXT NOT NULL DEFAULT '2023',
+    score_or_cgpa TEXT DEFAULT '',
+    start_year TEXT NOT NULL DEFAULT '',
+    end_year TEXT NOT NULL DEFAULT '',
     description TEXT DEFAULT '',
     order_index INTEGER NOT NULL DEFAULT 0,
     is_visible BOOLEAN NOT NULL DEFAULT true,
@@ -72,7 +73,7 @@ CREATE TABLE IF NOT EXISTS public.certificates_achievements (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title TEXT NOT NULL,
     issuer TEXT NOT NULL,
-    issue_date TEXT NOT NULL DEFAULT '2024',
+    issue_date TEXT NOT NULL DEFAULT '',
     credential_url TEXT DEFAULT '',
     certificate_file_url TEXT DEFAULT '',
     lor_loa_urls JSONB DEFAULT '[]'::jsonb,
@@ -91,7 +92,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
     cover_image_url TEXT NOT NULL DEFAULT '',
     demo_link TEXT DEFAULT '',
     github_link TEXT DEFAULT '',
-    tech_stack JSONB DEFAULT '["React", "Three.js", "TypeScript"]'::jsonb,
+    tech_stack JSONB DEFAULT '[]'::jsonb,
     featured BOOLEAN DEFAULT false,
     order_index INTEGER NOT NULL DEFAULT 0,
     is_visible BOOLEAN NOT NULL DEFAULT true,
@@ -135,32 +136,19 @@ CREATE POLICY "Allow write education" ON public.education FOR ALL USING (true) W
 CREATE POLICY "Allow write certificates" ON public.certificates_achievements FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow write projects" ON public.projects FOR ALL USING (true) WITH CHECK (true);
 
--- 3. SEED INITIAL DATA
-INSERT INTO public.profile_intro (id, full_name, tagline, bio, avatar_url)
+-- 3. INITIAL BASELINE PROFILE (NO dummy bio, tagline, or fake skills/projects)
+INSERT INTO public.profile_intro (id, full_name, tagline, bio, avatar_url, resume_file_url, status_badge, social_links)
 VALUES (
     'a0000000-0000-0000-0000-000000000001',
     'Dhanush Rao',
-    'WebGL & Cloud Architect',
-    'Crafting hyper-interactive digital experiences with Next.js, Three.js, and cloud architectures.',
-    '/avatars/male-1.png'
-) ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO public.skills (name, category, icon_url, proficiency_level, order_index) VALUES
-('TypeScript / JS', 'language', 'https://raw.githubusercontent.com/devicons/devicon/master/icons/typescript/typescript-original.svg', 95, 1),
-('Three.js / WebGL', 'language', 'https://raw.githubusercontent.com/devicons/devicon/master/icons/threejs/threejs-original.svg', 90, 2),
-('Next.js 15 & React', 'tool', 'https://raw.githubusercontent.com/devicons/devicon/master/icons/nextjs/nextjs-original.svg', 98, 3),
-('PostgreSQL / Supabase', 'database', 'https://raw.githubusercontent.com/devicons/devicon/master/icons/postgresql/postgresql-original.svg', 92, 4)
-ON CONFLICT DO NOTHING;
-
-INSERT INTO public.certificates_achievements (title, issuer, issue_date, type, order_index) VALUES
-('AWS Solutions Architect', 'Amazon Web Services', 'Nov 2024', 'certificate', 1),
-('Google Cloud Professional', 'Google Cloud', 'Jan 2024', 'certificate', 2)
-ON CONFLICT DO NOTHING;
-
-INSERT INTO public.projects (title, short_description, long_description, cover_image_url, featured, order_index) VALUES
-('Aether 3D Engine', 'Interactive WebGL spatial canvas with real-time physics.', 'Aether is an advanced 3D spatial playground built on Three.js and custom GLSL shaders.', 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80', true, 1),
-('Nova Quantum Dashboard', 'Real-time financial telemetry dashboard.', 'Nova provides high-frequency analytics streaming with glassmorphic UI.', 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80', true, 2)
-ON CONFLICT DO NOTHING;
+    '',
+    '',
+    '/avatars/male-1.png',
+    '',
+    '',
+    '{}'::jsonb
+) ON CONFLICT (id) DO UPDATE SET
+    full_name = EXCLUDED.full_name;
 
 -- 4. STORAGE BUCKET FOR MEDIA & DOCUMENTS
 INSERT INTO storage.buckets (id, name, public)

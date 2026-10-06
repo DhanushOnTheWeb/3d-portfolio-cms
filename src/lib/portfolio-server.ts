@@ -40,36 +40,21 @@ export async function getPortfolioServerData(): Promise<PortfolioData> {
       supabase.from('projects').select('*').order('order_index', { ascending: true }),
     ]);
 
-    if (!profileRes.error && profileRes.data) {
+    if (!profileRes.error) {
       return {
         profile: {
           ...initialPortfolioData.profile,
-          ...profileRes.data,
+          ...(profileRes.data || {}),
           social_links:
-            profileRes.data.social_links && typeof profileRes.data.social_links === 'object'
+            profileRes.data?.social_links && typeof profileRes.data.social_links === 'object'
               ? profileRes.data.social_links
               : initialPortfolioData.profile.social_links,
         },
-        skills:
-          !skillsRes.error && Array.isArray(skillsRes.data) && skillsRes.data.length > 0
-            ? skillsRes.data
-            : initialPortfolioData.skills,
-        work_experience:
-          !expRes.error && Array.isArray(expRes.data) && expRes.data.length > 0
-            ? expRes.data
-            : initialPortfolioData.work_experience,
-        education:
-          !eduRes.error && Array.isArray(eduRes.data) && eduRes.data.length > 0
-            ? eduRes.data
-            : initialPortfolioData.education,
-        certificates_achievements:
-          !certRes.error && Array.isArray(certRes.data) && certRes.data.length > 0
-            ? certRes.data
-            : initialPortfolioData.certificates_achievements,
-        projects:
-          !projectsRes.error && Array.isArray(projectsRes.data) && projectsRes.data.length > 0
-            ? projectsRes.data
-            : initialPortfolioData.projects,
+        skills: !skillsRes.error && Array.isArray(skillsRes.data) ? skillsRes.data : [],
+        work_experience: !expRes.error && Array.isArray(expRes.data) ? expRes.data : [],
+        education: !eduRes.error && Array.isArray(eduRes.data) ? eduRes.data : [],
+        certificates_achievements: !certRes.error && Array.isArray(certRes.data) ? certRes.data : [],
+        projects: !projectsRes.error && Array.isArray(projectsRes.data) ? projectsRes.data : [],
       };
     }
   } catch (err) {
