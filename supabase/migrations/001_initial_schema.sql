@@ -161,3 +161,18 @@ INSERT INTO public.projects (title, short_description, long_description, cover_i
 ('Aether 3D Engine', 'Interactive WebGL spatial canvas with real-time physics.', 'Aether is an advanced 3D spatial playground built on Three.js and custom GLSL shaders.', 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80', true, 1),
 ('Nova Quantum Dashboard', 'Real-time financial telemetry dashboard.', 'Nova provides high-frequency analytics streaming with glassmorphic UI.', 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80', true, 2)
 ON CONFLICT DO NOTHING;
+
+-- 4. STORAGE BUCKET FOR MEDIA & DOCUMENTS
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('portfolio-media', 'portfolio-media', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Public read portfolio-media" ON storage.objects;
+DROP POLICY IF EXISTS "Allow upload portfolio-media" ON storage.objects;
+DROP POLICY IF EXISTS "Allow update portfolio-media" ON storage.objects;
+DROP POLICY IF EXISTS "Allow delete portfolio-media" ON storage.objects;
+
+CREATE POLICY "Public read portfolio-media" ON storage.objects FOR SELECT USING (bucket_id = 'portfolio-media');
+CREATE POLICY "Allow upload portfolio-media" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'portfolio-media');
+CREATE POLICY "Allow update portfolio-media" ON storage.objects FOR UPDATE USING (bucket_id = 'portfolio-media');
+CREATE POLICY "Allow delete portfolio-media" ON storage.objects FOR DELETE USING (bucket_id = 'portfolio-media');
