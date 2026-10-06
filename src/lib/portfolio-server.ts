@@ -10,7 +10,9 @@ import { PortfolioData } from './types';
  */
 export async function getPortfolioServerData(): Promise<PortfolioData> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseKey =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
     return initialPortfolioData;
